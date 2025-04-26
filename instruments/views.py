@@ -6,13 +6,24 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from .models import Instrument, Order
 from .api.serializers import InstrumentSerializer, OrderSerializer
+from drf_yasg.utils import swagger_auto_schema
 
 # CRUD for Instrument
 class InstrumentListCreateAPIView(APIView):
+    
+    @swagger_auto_schema(
+        responses={200: InstrumentSerializer(many=True)}
+    )
+
     def get(self, request):
         instruments = Instrument.objects.all()
         serializer = InstrumentSerializer(instruments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(
+        request_body=InstrumentSerializer,
+        responses={201: InstrumentSerializer()}
+    )    
     
     def post(self, request):
         serializer = InstrumentSerializer(data=request.data)
@@ -22,11 +33,21 @@ class InstrumentListCreateAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class InstrumentDetailAPIView(APIView):
+
+    @swagger_auto_schema(
+        responses={200: InstrumentSerializer()}
+    )
+
     def get(self, request, pk):
         instrument = get_object_or_404(Instrument, pk=pk)
         serializer = InstrumentSerializer(instrument)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
+    @swagger_auto_schema(
+        request_body=InstrumentSerializer,
+        responses={200: InstrumentSerializer()}
+    )
+
     def put(self, request, pk):
         instrument = get_object_or_404(Instrument, pk=pk)
         serializer = InstrumentSerializer(instrument, data=request.data)
@@ -34,7 +55,11 @@ class InstrumentDetailAPIView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+    @swagger_auto_schema(
+        responses={204: 'Deleted successfully'}
+    ) 
+
     def delete(self, request, pk):
         instrument = get_object_or_404(Instrument, pk=pk)
         instrument.delete()
